@@ -1,16 +1,30 @@
 import React, { useState } from 'react'
 import { AsyncPaginate } from 'react-select-async-paginate'
-import { geoApiUrl,geoApi } from './Api.js'
+import axios from 'axios'
+import { UrlGeo,geoApi } from './Api.js'
 
 const Search = ({onSearchChange}) => {
     const [search, setSearch] = useState(null)
+    const [searchResults, setSearchResults] = useState([]);
 
     const loadOptions = async (inputValue) => {     
-        const response = await fetch(geoApiUrl, geoApi);
-        response => response.json()
-        // return const response = await fetch(url, geoApi);
-        // const result = await response.text();
-        // console.log(result);  
+        try {
+            const response = await axios.get(UrlGeo, {
+                params: {
+                    q: inputValue
+                },
+                headers: geoApi.headers
+            });
+
+            console.log(response.data);
+            return response.data.data.map(city => ({
+                label: city.city,
+                value: city.id
+            }));
+        } catch (error) {
+            console.error(error);
+            return [];
+        }
     }
 
     const handleOnChange = (searchData) => {
@@ -18,6 +32,7 @@ const Search = ({onSearchChange}) => {
         onSearchChange(searchData);
     }
     return (
+        <>
         <AsyncPaginate
             placeholder='Seach for City'
             debounceTimeout={600}
@@ -25,6 +40,12 @@ const Search = ({onSearchChange}) => {
             onChange={handleOnChange}
             loadOptions={loadOptions}
         />
+        <div>
+                {searchResults.map(city => (
+                    <div key={city.id}>{city.city}</div>
+                ))}
+            </div>
+        </>
     )
 }
 
